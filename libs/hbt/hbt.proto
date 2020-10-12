@@ -1,0 +1,201 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package com.honeywell.hbt.protobuf;
+
+option java_package         = "com.honeywell.hbt.protobuf";
+option java_outer_classname = "HbtProto";
+
+message NotificationSet{
+    repeated Notification notifications = 1;
+
+    message Notification {
+        /*
+            // Indexes of Data Types
+
+            // Unknown placeholder for future expansion.
+            Unknown         = 0;
+
+            // Basic Types
+            Int8            = 1;
+            Int16           = 2;
+            Int32           = 3;
+            Int64           = 4;
+            UInt8           = 5;
+            UInt16          = 6;
+            UInt32          = 7;
+            UInt64          = 8;
+            Float           = 9;
+            Double          = 10;
+            Boolean         = 11;
+            String          = 12;
+            DateTime        = 13;
+            Text            = 14;
+
+            // Additional Metric Types
+            UUID            = 15;
+            DataSet         = 16;
+            Bytes           = 17;
+            File            = 18;
+            Template        = 19;
+            
+            // Additional PropertyValue Types
+            PropertySet     = 20;
+            PropertySetList = 21;
+
+        */
+
+        NotifyClasses   notify_class        = 1;
+        string      source      = 2;
+        uint64      timestamp   = 3;        // Timestamp at message sending time
+        string      uuid        = 4;        // UUID to track message type in terms of schema definitions
+        string      description = 5;
+        PropertySet properties  = 6;
+        Body        body        = 7;
+        string      type = 8;
+        AlarmDetails    alarm_details = 9;
+        Priorities priority = 10;     
+        repeated google.protobuf.Any extensions = 11;
+        bytes       raw_bytes        = 12;        // To optionally bypass the whole definition above
+    }
+
+    message PropertyValue {
+
+        uint32     type                    = 1;
+        bool       is_null                 = 2; 
+
+        oneof value {
+            uint32          int_value               = 3;
+            uint64          long_value              = 4;
+            float           float_value             = 5;
+            double          double_value            = 6;
+            bool            boolean_value           = 7;
+            string          string_value            = 8;
+            PropertySet     propertyset_value       = 9;
+            PropertySetList propertysets_value      = 10;      // List of Property Values
+            PropertyValueExtension extension_value  = 11;
+        }
+
+        message PropertyValueExtension {
+            repeated google.protobuf.Any extensions = 1;
+        }
+    }
+
+    message PropertySet {
+        repeated string        keys     = 1;         // Names of the properties
+        repeated PropertyValue values   = 2;
+        repeated google.protobuf.Any extensions  = 3;
+    }
+
+    message PropertySetList {
+        repeated PropertySet propertyset = 1;
+        repeated google.protobuf.Any extensions = 2;
+    }
+
+    message MetaData {
+        // Bytes specific metadata
+        bool   is_multi_part   = 1;
+
+        // General metadata
+        string content_type    = 2;        // Content/Media type
+        uint64 size            = 3;        // File size, String size, Multi-part size, etc
+        uint64 seq             = 4;        // Sequence number for multi-part messages
+
+        // File metadata
+        string file_name       = 5;        // File name
+        string file_type       = 6;        // File type (i.e. xml, json, txt, cpp, etc)
+        string md5             = 7;        // md5 of data
+
+        // Catchalls and future expansion
+        string description     = 8;        // Could be anything such as json or xml of custom properties
+        repeated google.protobuf.Any extensions = 9;
+    }
+
+    message Body {
+        MetaData metadata      = 1;        // Metadata for the payload
+        PropertySet properties = 2;
+
+        oneof value {
+            uint32   int_value                      = 3;
+            uint64   long_value                     = 4;
+            float    float_value                    = 5;
+            double   double_value                   = 6;
+            bool     boolean_value                  = 7;
+            string   string_value                   = 8;
+            bytes    bytes_value                    = 9;       // Bytes, File
+            DataSet  dataset_value                  = 10;
+            BodyValueExtension extension_value      = 11;
+        }
+
+        message BodyValueExtension {
+            repeated google.protobuf.Any extensions = 1;
+        }
+    }
+
+    message AlarmDetails{
+        AckStates   ack_state = 1;
+        AlarmStates alarm_state = 2;
+    }
+    
+    enum NotifyClasses{	
+        Event=0;  // Indicates event notification.
+        Alarm=1;             // Indicates alarm notification.
+        AckNotification=2;   // Indicates Ack notification.
+    }
+    
+    enum AckStates{	
+        Acked=0;  
+        Unacked=1;
+        Pending=2;
+    }
+    
+    enum AlarmStates{
+        OffNormal=0;
+        Normal=1;
+        Fault=2;
+        Deferred_Shelved=3;
+        Reopen=4;
+    }
+    
+    enum Priorities{	
+        Emergency=0;   // Indicates the Event is of highest priority 'Emergency" event.
+        Alert=1;       // Indicates the event represents a alert message.
+        Critical=2;    // Indicates the event represents a Critical alarm.
+        Error=3;       // Indicates the event represents an Error message.
+        Warning=4;     // Indicates the event represents an Warning message.
+        Notice=5;      // Indicates the event represents a Notice event.
+        Informational=6; // Indicates the event represents an Informational event.
+        Diagnostic=7;  // Indicates the event represents an Diagnostic event.
+    }
+    
+    message DataSet {
+    
+        message DataSetValue {
+    
+            oneof value {
+                uint32 int_value                        = 1;
+                uint64 long_value                       = 2;
+                float  float_value                      = 3;
+                double double_value                     = 4;
+                bool   boolean_value                    = 5;
+                string string_value                     = 6;
+                DataSetValueExtension extension_value   = 7;
+            }
+    
+            message DataSetValueExtension {
+                repeated google.protobuf.Any extensions = 1;
+            }
+        }
+    
+        message Row {
+            repeated DataSetValue elements  = 1;
+            repeated google.protobuf.Any extensions = 2;
+        }
+    
+        uint64   num_of_columns    = 1;
+        repeated string   columns           = 2;
+        repeated uint32   types             = 3;
+        repeated Row      rows              = 4;
+        repeated google.protobuf.Any extensions = 5;
+    }
+}
