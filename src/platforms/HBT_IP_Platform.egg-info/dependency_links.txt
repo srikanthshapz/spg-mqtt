@@ -1,0 +1,1 @@
+https://github.com/srikanthshapz/spg-mqtt/tree/master/#egg=HBT_IP_Core-1.0.5
